@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { DataService } from "../services/dataApi";
 export default function Dashboard() {
 const [user, setUser] = useState(null);
 const navigate = useNavigate();
@@ -43,30 +43,42 @@ const handleChange = (e) => {
 setForm({ ...form, [e.target.name]: e.target.value });
 };
 
-const addRow = () => {
-  console.log("Adding:", form);
+const addRow = async () => {
+  try {
+    const res = await dataService.addData(form);
 
-  if (!form.date) {
-    alert("Please enter data first");
-    return;
+    console.log("Saved to backend:", res.data);
+
+    setRows(prev => [...prev, res.data]);
+
+    setForm({
+      date: "",
+      policies: "",
+      corporates: "",
+      active: "",
+      inactive: "",
+      members: "",
+      lives: "",
+    });
+
+  } catch (err) {
+    console.error("Save failed:", err);
   }
+};
 
-  const newRow = {
-    id: rows.length + 1,
-    ...form,
-  };
+const dataService = new DataService();
 
-  setRows(prev => [...prev, newRow]);
+useEffect(() => {
+  fetchData();
+}, []);
 
-  setForm({
-    date: "",
-    policies: "",
-    corporates: "",
-    active: "",
-    inactive: "",
-    members: "",
-    lives: "",
-  });
+const fetchData = async () => {
+    console.log("Fetching data from backend...");
+
+  const res = await dataService.getData();
+  setRows(res.data);
+  
+  console.log("Backend returned:", res.data);
 };
 
   const menuItems = [
@@ -192,18 +204,18 @@ return ( <div className="flex h-screen bg-gray-100">
       </td>
     </tr>
   ) : (
-    rows.map((row) => (
-      <tr key={row.id} className="border-b text-center">
-        <td className="p-3">{row.id}</td>
-        <td className="p-3">{row.date}</td>
-        <td className="p-3">{row.policies}</td>
-        <td className="p-3">{row.corporates}</td>
-        <td className="p-3">{row.active}</td>
-        <td className="p-3">{row.inactive}</td>
-        <td className="p-3">{row.members}</td>
-        <td className="p-3">{row.lives}</td>
-      </tr>
-    ))
+    rows.map((row, index) => (
+  <tr key={row._id} className="border-b text-center">
+    <td className="p-3">{index + 1}</td>
+    <td className="p-3">{row.date}</td>
+    <td className="p-3">{row.policies}</td>
+    <td className="p-3">{row.corporates}</td>
+    <td className="p-3">{row.active}</td>
+    <td className="p-3">{row.inactive}</td>
+    <td className="p-3">{row.members}</td>
+    <td className="p-3">{row.lives}</td>
+  </tr>
+))
   )}
 </tbody>
 
